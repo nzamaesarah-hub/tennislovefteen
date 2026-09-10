@@ -5,6 +5,8 @@ use App\Http\Controllers\CourtController;
 use App\Http\Controllers\BookingController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Admin\AdminDashboardController;
+use App\Http\Controllers\Admin\AdminCourtController;
+use App\Http\Controllers\Admin\AdminUserController;
 
 // 1. Landing Page Utama / Daftar Lapangan
 Route::get('/', [CourtController::class, 'index'])->name('home');
@@ -12,10 +14,10 @@ Route::get('/', [CourtController::class, 'index'])->name('home');
 // 2. Area User yang Sudah Login
 Route::middleware(['auth'])->group(function () {
     
-    // Tab 1: Booking (Daftar Lapangan setelah login)
+    // Tab 1: Booking
     Route::get('/dashboard', [CourtController::class, 'index'])->name('dashboard');
 
-    // Tab 2: History (Disinkronkan nama routenya menjadi 'history')
+    // Tab 2: History
     Route::get('/history', [BookingController::class, 'userBookings'])->name('history');
     
     // Tab 3: Profile
@@ -26,12 +28,28 @@ Route::middleware(['auth'])->group(function () {
     // Booking & Payment Process
     Route::get('/booking/create/{court}', [BookingController::class, 'create'])->name('booking.create');
     Route::post('/booking', [BookingController::class, 'store'])->name('booking.store');
-    Route::get('/booking/checkout/{id}', [BookingController::class, 'checkout'])->name('booking.checkout');
-    Route::post('/booking/{id}/upload-proof', [BookingController::class, 'uploadProof'])->name('booking.uploadProof');
+    Route::get('/booking/checkout', [BookingController::class, 'checkout'])->name('booking.checkout');
+    Route::post('/booking/upload-proof', [BookingController::class, 'uploadProof'])->name('booking.uploadProof');
 
-    // Admin Panel
-    Route::get('/admin/dashboard', [AdminDashboardController::class, 'index'])->name('admin.dashboard');
-    Route::patch('/admin/booking/{id}/status', [AdminDashboardController::class, 'updateStatus'])->name('admin.booking.updateStatus');
+    Route::delete('/booking/{id}', [BookingController::class, 'destroy'])->name('booking.destroy');
+});
+
+// 3. Area Khusus Admin
+Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
+    
+    // Dashboard Admin
+    Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
+
+    // Konfirmasi / Tolak Pembayaran
+    Route::patch('/booking/{id}/status', [AdminDashboardController::class, 'updateStatus'])
+        ->name('booking.updateStatus');
+
+    // Data Lapangan
+    Route::resource('courts', AdminCourtController::class);
+
+    // Data Pengguna
+    Route::resource('users', AdminUserController::class)
+        ->only(['index', 'show', 'edit', 'update', 'destroy']);
 });
 
 require __DIR__.'/auth.php';

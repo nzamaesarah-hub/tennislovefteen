@@ -4,44 +4,32 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Booking;
-use App\Models\Court;
-use App\Models\User;
 use Illuminate\Http\Request;
 
 class AdminDashboardController extends Controller
 {
     public function index()
     {
-        $totalBookings = Booking::count();
-        $totalEarnings = Booking::where('status', 'confirmed')->sum('total_price');
-        $totalUsers    = User::where('is_admin', false)->count();
-        $totalCourts   = Court::count();
-
+        // Mengambil semua data booking beserta data user penyewa dan lapangan
         $bookings = Booking::with(['user', 'court'])
-            ->latest()
-            ->paginate(10);
+            ->orderBy('created_at', 'desc')
+            ->get();
 
-        return view('admin.dashboard', compact(
-            'totalBookings', 
-            'totalEarnings', 
-            'totalUsers', 
-            'totalCourts', 
-            'bookings'
-        ));
+        return view('admin.dashboard', compact('bookings'));
     }
 
-    // Fungsi Ubah Status Booking (Approve / Reject) oleh Admin
     public function updateStatus(Request $request, $id)
     {
+        $booking = Booking::findOrFail($id);
+
         $request->validate([
-            'status' => 'required|in:confirmed,cancelled,pending',
+            'status' => 'required|in:confirmed,rejected',
         ]);
 
-        $booking = Booking::findOrFail($id);
         $booking->update([
             'status' => $request->status,
         ]);
 
-        return redirect()->back()->with('success', 'Status transaksi berhasil diperbarui!');
+        return redirect()->back()->with('success', 'Status pemesanan berhasil diperbarui.');
     }
 }

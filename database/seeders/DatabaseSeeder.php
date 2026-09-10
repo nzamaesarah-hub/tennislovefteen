@@ -10,11 +10,12 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
-        // Buat akun testing
+        // Buat akun admin
         User::create([
-            'name' => 'Sarah',
+            'name' => 'Nahza',
             'email' => 'nzamaesarah@gmail.com',
-            'password' => Hash::make('password123'), // Password akun kamu
+            'password' => Hash::make('password123'),
+            'role' => 'admin', // <-- INI YANG BARU, otomatis jadi admin!
         ]);
 
         // Panggil seeder lapangan
